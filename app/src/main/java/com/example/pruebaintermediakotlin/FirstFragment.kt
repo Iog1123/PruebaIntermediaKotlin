@@ -2,6 +2,7 @@ package com.example.pruebaintermediakotlin
 
 import android.content.ClipData
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -41,42 +42,52 @@ private  lateinit var binding: FragmentFirstBinding
         picker.maxValue=30
         picker.minValue=1
 
-        picker.setOnValueChangedListener{ NumberPicker,i,i2 ->
-            Toast.makeText(requireContext(),NumberPicker.value.toString(), Toast.LENGTH_LONG).show()
-        }
 
         viewModel.selectedItem().observe(viewLifecycleOwner, Observer {
-            binding.NombreItem.setText(it.item)
-            binding.ContenedorPrecioU.setText(it.itemPrice)
-            binding.ContenedorCantidad.value= it.queantity
-            binding.TextTotalPagar.setText(it.total)
+            it?.let {
+                binding.NombreItem.setText(it.item)
+                binding.ContenedorPrecioU.setText(it.itemPrice)
+                binding.ContenedorCantidad.value.toString().toInt(it.queantity)
+                Log.d("ID", it.id.toString())
+                idConsumption = it.id
+                consumptionSelected = it
+            }
         })
 
+
+        picker.setOnValueChangedListener{ NumberPicker,i,i2 ->
+            Toast.makeText(requireContext(),NumberPicker.value.toString(), Toast.LENGTH_LONG).show()
+
+           var  Cantidad = binding.ContenedorCantidad.value.toString().toInt()
+            var Precio= binding.ContenedorPrecioU.text.toString().toInt()
+
+            var total = Cantidad * Precio
+            binding.TextTotalPagar.setText(total.toString())
+
+        }
+
+
+
         binding.buttonGuardar.setOnClickListener{
-            val Precio=binding.ContenedorPrecioU.text.toString().toInt()
-            val Cantidad= binding.ContenedorCantidad.value.toString().toInt()
+            var Cantidad= binding.ContenedorCantidad.value.toString().toInt()
+            var precio: Int=  binding.ContenedorPrecioU.text.toString().toInt()
+            var total = binding.TextTotalPagar.text.toString().toInt()
+            var nombreItem= binding.NombreItem.text.toString()
 
-            val Total= Precio*Cantidad
-            binding.TextTotalPagar.setText(Total.toString())
-
-
-            saveData()
+            saveRegistro(Cantidad,precio,total,nombreItem)
             viewModel.selected(null)
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
 
 
 
     }
 
-    private fun saveData() {
-        val nombreItem = binding.NombreItem.toString()
-        val precio = binding.ContenedorPrecioU.toString()
-        val cantidad = binding.ContenedorCantidad.toString()
-        val total= binding.TextTotalPagar.toString().toInt()
+
+    private fun saveRegistro(Cantidad: Int,precio: Int,total: Int,nombreItem: String) {
 
 
-        if (nombreItem.isEmpty() && precio.isEmpty() && cantidad.isEmpty()) {
+        if (nombreItem.isEmpty() && precio==0 && Cantidad ==0) {
             Toast.makeText(context, "Debes añadir los datos", Toast.LENGTH_LONG).show()
         } else {
             if (idConsumption == 0) {
@@ -84,7 +95,7 @@ private  lateinit var binding: FragmentFirstBinding
 
                         item = nombreItem,
                         itemPrice = precio.toInt(),
-                        queantity = cantidad.toInt(),
+                        queantity = Cantidad.toInt(),
                         total = total)
                 viewModel.insertConsumption(newConsumption)
 
@@ -93,7 +104,7 @@ private  lateinit var binding: FragmentFirstBinding
                         id = idConsumption,
                         item = nombreItem,
                         itemPrice = precio.toInt(),
-                        queantity= cantidad.toInt(),
+                        queantity= Cantidad.toInt(),
                         total = total)
                 viewModel.insertConsumption(newConsumption)
             }
